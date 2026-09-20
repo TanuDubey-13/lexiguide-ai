@@ -36,7 +36,7 @@ interface DocumentContextType {
   setDocumentType: (type: DocumentType) => void;
   loadDemoDocument: () => Promise<void>;
   uploadCustomDocument: (fileOrName: File | string, type?: DocumentType) => Promise<void>;
-  reuploadCurrentDocument: () => Promise<boolean>;
+  reuploadCurrentDocument: () => Promise<string | null>;
   clearDocument: () => void;
   openClauseExplainer: (clause: ClauseHighlight) => void;
   closeClauseExplainer: () => void;
@@ -100,7 +100,9 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!isOnline) return undefined;
 
       // Fetch public PDF asset
+      const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
       const pathsToTry = [
+        `${baseUrl}/Residential_Rental_Agreement.pdf`,
         'Residential_Rental_Agreement.pdf',
         './Residential_Rental_Agreement.pdf',
         '/lexiguide-ai/Residential_Rental_Agreement.pdf',
@@ -271,9 +273,10 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   /**
    * Re-uploads the active document if backend restarted and lost in-memory session.
+   * Returns the new backend document ID on success, or null on failure.
    */
-  const reuploadCurrentDocument = async (): Promise<boolean> => {
-    if (!activeDocument) return false;
+  const reuploadCurrentDocument = async (): Promise<string | null> => {
+    if (!activeDocument) return null;
 
     setIsUploading(true);
     setUploadError(null);
@@ -281,17 +284,18 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       if (activeDocument.rawFile) {
         const res = await uploadDocumentToBackend(activeDocument.rawFile);
-        setActiveDocument((prev) => prev ? { ...prev, backendDocumentId: res.document_id } : null);
+        const newId = res.document_id;
+        setActiveDocument((prev) => prev ? { ...prev, backendDocumentId: newId } : null);
         setBackendStatus('connected');
         setIsUploading(false);
-        return true;
+        return newId;
       } else if (activeDocument.isDemo) {
         const id = await uploadDemoPdfToBackend();
         if (id) {
           setActiveDocument((prev) => prev ? { ...prev, backendDocumentId: id } : null);
           setBackendStatus('connected');
           setIsUploading(false);
-          return true;
+          return id;
         }
       }
     } catch (err: any) {
@@ -299,7 +303,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       setIsUploading(false);
     }
-    return false;
+    return null;
   };
 
   const clearDocument = () => {

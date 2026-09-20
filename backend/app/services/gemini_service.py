@@ -7,6 +7,13 @@ from dotenv import load_dotenv
 from .retrieval_service import DocumentChunk, STOP_WORDS, tokenize
 
 # Load environment variables from backend/.env if present
+_env_locations = [
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "backend", ".env"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"),
+]
+for _loc in _env_locations:
+    if os.path.exists(_loc):
+        load_dotenv(dotenv_path=_loc, override=False)
 load_dotenv()
 
 
@@ -150,9 +157,14 @@ def build_document_only_fallback(
                 best_sent = s
 
     missing_ratio = len(missing_tokens) / len(q_tokens) if q_tokens else 1.0
+    QUESTION_AUXILIARY_WORDS = {
+        'penalty', 'rule', 'provision', 'fee', 'charge', 'amount', 'date', 'consequence', 'policy',
+        'happens', 'happen', 'occur', 'applies', 'apply', 'say', 'says', 'mean', 'means', 'stipulate',
+        'require', 'requirement', 'requirements', 'condition', 'conditions', 'term', 'terms', 'early',
+    }
     subject_missing = [
         t for t in missing_tokens
-        if t not in {'penalty', 'rule', 'provision', 'fee', 'charge', 'amount', 'date', 'consequence', 'policy'}
+        if t not in QUESTION_AUXILIARY_WORDS
     ]
 
     # If critical subject terms are absent in the retrieved excerpts
@@ -176,12 +188,21 @@ def build_document_only_fallback(
     pages = sorted(list(set(c.page for c, _ in retrieved_chunks)))
     pages_str = ", ".join(f"Page {p}" for p in pages)
 
-    relevant_sentences = []
+    scored_sentences = []
     for s in sentences:
         s_toks = set(tokenize(s))
-        if len(set(matched_tokens) & s_toks) >= max(1, len(matched_tokens) // 2):
-            if s not in relevant_sentences:
-                relevant_sentences.append(s)
+        matches = len(set(matched_tokens) & s_toks)
+        if matches > 0:
+            # Bonus if sentence directly addresses key section
+            bonus = 0
+            if 'terminate' in q_tokens and ('termination' in s.lower() or 'lock-in' in s.lower() or 'notice' in s.lower()):
+                bonus += 2
+            if 'deposit' in q_tokens and ('security deposit' in s.lower() or 'refundable' in s.lower()):
+                bonus += 2
+            scored_sentences.append((matches + bonus, s))
+
+    scored_sentences.sort(key=lambda x: x[0], reverse=True)
+    relevant_sentences = [s for _, s in scored_sentences]
 
     if not relevant_sentences and best_sent:
         relevant_sentences = [best_sent]

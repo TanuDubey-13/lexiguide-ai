@@ -33,13 +33,20 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
   prefilledQuery = '',
   autoSubmit = false,
 }) => {
-  const { reuploadCurrentDocument, backendStatus, refreshBackendStatus } = useDocument();
+  const { activeDocument, reuploadCurrentDocument, backendStatus, refreshBackendStatus } = useDocument();
   const [messages, setMessages] = useState<QAMessage[]>(initialMessages);
   const [inputText, setInputText] = useState<string>(prefilledQuery);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isReuploading, setIsReuploading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasAutoSubmittedRef = useRef(false);
+  const currentDocIdRef = useRef<string | undefined>(document.backendDocumentId);
+
+  useEffect(() => {
+    if (document.backendDocumentId) {
+      currentDocIdRef.current = document.backendDocumentId;
+    }
+  }, [document.backendDocumentId]);
 
   const suggestedQuestions = [
     'What happens if I terminate early?',
@@ -81,17 +88,64 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
     setInputText('');
     setIsLoading(true);
 
+    let targetBackendId = currentDocIdRef.current || document.backendDocumentId;
+
+    // Proactively index demo document if targetBackendId is missing
+    if (!targetBackendId && (document.isDemo || activeDocument?.isDemo)) {
+      try {
+        const autoId = await reuploadCurrentDocument();
+        if (autoId) {
+          targetBackendId = autoId;
+          currentDocIdRef.current = autoId;
+        }
+      } catch (e) {
+        console.warn('Initial demo auto-index attempt:', e);
+      }
+    }
+
     try {
       const aiMsg = await askDocument(
         userMsg.text,
         document.id,
-        document.backendDocumentId,
+        targetBackendId,
         document.name
       );
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err: any) {
       console.error('Error asking document:', err);
       if (err instanceof BackendDocumentNotFoundError) {
+        // Automatic session recovery: if document is demo or has rawFile, re-upload to re-index and retry once
+        const isEligible = Boolean(
+          document.isDemo ||
+          activeDocument?.isDemo ||
+          document.rawFile ||
+          activeDocument?.rawFile
+        );
+
+        if (isEligible) {
+          try {
+            setIsReuploading(true);
+            const newDocId = await reuploadCurrentDocument();
+            setIsReuploading(false);
+
+            if (newDocId) {
+              currentDocIdRef.current = newDocId;
+              // Retry asking document exactly once with the newly indexed document session
+              const retryAiMsg = await askDocument(
+                userMsg.text,
+                document.id,
+                newDocId,
+                document.name
+              );
+              setMessages((prev) => [...prev, retryAiMsg]);
+              return;
+            }
+          } catch (recoveryErr) {
+            console.error('Automatic session recovery failed:', recoveryErr);
+            setIsReuploading(false);
+          }
+        }
+
         const restartMsg: QAMessage = {
           id: `err-${Date.now()}`,
           sender: 'ai',
@@ -117,10 +171,11 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
 
   const handleReupload = async () => {
     setIsReuploading(true);
-    const success = await reuploadCurrentDocument();
+    const newDocId = await reuploadCurrentDocument();
     setIsReuploading(false);
 
-    if (success) {
+    if (newDocId) {
+      currentDocIdRef.current = newDocId;
       setMessages((prev) => [
         ...prev,
         {
@@ -139,7 +194,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
     setMessages([]);
   };
 
-  const isLiveBackendActive = Boolean(document.backendDocumentId && backendStatus === 'connected');
+  const isLiveBackendActive = Boolean((currentDocIdRef.current || document.backendDocumentId) && backendStatus === 'connected');
 
   return (
     <div className="flex flex-col h-[700px] max-h-[85vh] bg-white rounded-3xl border border-[#E2E8F0] shadow-card overflow-hidden">
