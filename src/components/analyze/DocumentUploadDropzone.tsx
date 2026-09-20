@@ -111,13 +111,22 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
         </div>
       </div>
 
-      {/* Large Drag-and-Drop Area */}
+      {/* Drop Area */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Upload document: drag and drop file here or press enter to select from computer"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => !isUploading && fileInputRef.current?.click()}
-        className={`relative rounded-3xl border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-200 ${
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !isUploading) {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        className={`relative rounded-3xl border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
           isUploading ? 'cursor-wait opacity-80' : 'cursor-pointer'
         } ${
           isDragging
@@ -131,6 +140,7 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
           accept=".pdf,.txt"
           onChange={handleFileInput}
           disabled={isUploading}
+          aria-label="Upload document (PDF or TXT)"
           className="hidden"
         />
 
@@ -143,10 +153,10 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
             )}
           </div>
 
-          <div className="space-y-1">
-            <p className="text-base sm:text-lg font-bold text-[#102A43]">
-              {isUploading ? 'Uploading and indexing document...' : 'Drop your document here'}
-            </p>
+          <div className="space-y-1 max-w-sm">
+            <h3 className="text-lg font-bold text-[#102A43] font-sans">
+              {isUploading ? 'Processing legal document...' : 'Drag and drop your document here'}
+            </h3>
             <p className="text-sm text-[#64748B]">
               {isUploading ? (
                 'Extracting page text and preparing chunks on the backend...'
@@ -158,7 +168,7 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-[#94A3B8]">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-[#64748B]">
             <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#E2E8F0]">PDF</span>
             <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#E2E8F0]">TXT</span>
             <span>(Max 25 MB)</span>

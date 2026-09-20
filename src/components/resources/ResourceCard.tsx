@@ -73,10 +73,12 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
 
       {/* Footer Toggle Button */}
       <div className="px-6 py-3 bg-[#FAF9F5] border-t border-[#E2E8F0] flex items-center justify-between">
-        <span className="text-[11px] text-[#94A3B8] font-medium">Educational Guidance</span>
+        <span className="text-[11px] text-[#64748B] font-medium">Educational Guidance</span>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs font-bold text-[#102A43] hover:text-[#C49A3A] transition-colors flex items-center gap-1"
+          aria-expanded={expanded}
+          aria-label={expanded ? `Collapse guide: ${resource.title}` : `Explore guide: ${resource.title}`}
+          className="text-xs font-bold text-[#102A43] hover:text-[#C49A3A] transition-colors flex items-center gap-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] rounded px-1.5 py-0.5"
         >
           <span>{expanded ? 'Show Less' : 'Explore Guide'}</span>
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

@@ -91,12 +91,13 @@ export const CompareUploader: React.FC<CompareUploaderProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-[#94A3B8] pt-2">
+          <div className="flex items-center justify-between text-xs text-[#64748B] pt-2">
             <span>Formats: PDF, DOCX</span>
             <label className="text-[#102A43] font-semibold hover:underline cursor-pointer">
               Change file
               <input
                 type="file"
+                aria-label="Upload Document A file"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
@@ -128,12 +129,13 @@ export const CompareUploader: React.FC<CompareUploaderProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-[#94A3B8] pt-2">
+          <div className="flex items-center justify-between text-xs text-[#64748B] pt-2">
             <span>Formats: PDF, DOCX</span>
             <label className="text-[#102A43] font-semibold hover:underline cursor-pointer">
               Change file
               <input
                 type="file"
+                aria-label="Upload Document B file"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {

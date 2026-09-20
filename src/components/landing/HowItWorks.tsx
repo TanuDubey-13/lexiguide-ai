@@ -106,7 +106,7 @@ export const HowItWorks: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="mt-6 pt-3 border-t border-[#F1EFE9] flex items-center justify-between text-[11px] font-semibold tracking-wider uppercase text-[#94A3B8]">
+                <div className="mt-6 pt-3 border-t border-[#F1EFE9] flex items-center justify-between text-[11px] font-semibold tracking-wider uppercase text-[#64748B]">
                   <span>Step {index + 1} of 6</span>
                   {index < steps.length - 1 && (
                     <span className="text-[#C49A3A] select-none font-mono">↓ Next</span>

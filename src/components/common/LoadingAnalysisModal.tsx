@@ -16,7 +16,12 @@ export const LoadingAnalysisModal: React.FC<LoadingAnalysisModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1F33]/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Analyzing document progress"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1F33]/60 backdrop-blur-sm animate-in fade-in duration-200"
+    >
       <div className="bg-white rounded-2xl shadow-modal border border-[#E2E8F0] p-6 sm:p-8 max-w-md w-full relative overflow-hidden">
         {/* Top accent bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#102A43] via-[#C49A3A] to-[#102A43] animate-pulse" />
@@ -45,7 +50,7 @@ export const LoadingAnalysisModal: React.FC<LoadingAnalysisModalProps> = ({
                     ? 'text-[#102A43] font-medium'
                     : isCurrent
                     ? 'text-[#102A43] font-semibold scale-[1.01]'
-                    : 'text-[#94A3B8]'
+                    : 'text-[#64748B]'
                 }`}
               >
                 {isCompleted ? (

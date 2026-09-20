@@ -93,7 +93,7 @@ export const InteractivePreview: React.FC = () => {
 
             {/* Document Page Simulation */}
             <div className="bg-white p-6 sm:p-7 rounded-2xl shadow-subtle border border-[#E2E8F0] space-y-4 font-serif text-[#1B365D] text-sm leading-relaxed relative">
-              <div className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-widest border-b border-[#F1EFE9] pb-2">
+              <div className="text-[11px] font-mono text-[#64748B] uppercase tracking-widest border-b border-[#F1EFE9] pb-2">
                 Residential Tenancy Covenants • Executed Copy
               </div>
 
@@ -103,8 +103,17 @@ export const InteractivePreview: React.FC = () => {
 
               {/* Clause Highlight 1: Termination */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Select Section 7 Termination and Notice Conditions clause preview"
                 onClick={() => setActiveClausePreview('termination')}
-                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveClausePreview('termination');
+                  }
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3A] ${
                   activeClausePreview === 'termination'
                     ? 'bg-amber-50/80 border-[#C49A3A] ring-2 ring-[#C49A3A]/20 shadow-sm'
                     : 'bg-amber-50/30 border-amber-200 hover:bg-amber-50/60'
@@ -126,8 +135,17 @@ export const InteractivePreview: React.FC = () => {
 
               {/* Clause Highlight 2: Security Deposit */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Select Section 4 Security Deposit clause preview"
                 onClick={() => setActiveClausePreview('deposit')}
-                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveClausePreview('deposit');
+                  }
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1B365D] ${
                   activeClausePreview === 'deposit'
                     ? 'bg-sky-50/90 border-[#1B365D] ring-2 ring-[#1B365D]/20 shadow-sm'
                     : 'bg-sky-50/30 border-sky-200 hover:bg-sky-50/60'
@@ -149,8 +167,17 @@ export const InteractivePreview: React.FC = () => {
 
               {/* Clause Highlight 3: Renewal */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Select Section 2 Renewal Terms clause preview"
                 onClick={() => setActiveClausePreview('renewal')}
-                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveClausePreview('renewal');
+                  }
+                }}
+                className={`p-3 rounded-xl border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 ${
                   activeClausePreview === 'renewal'
                     ? 'bg-rose-50/90 border-rose-300 ring-2 ring-rose-200 shadow-sm'
                     : 'bg-rose-50/30 border-rose-200 hover:bg-rose-50/60'

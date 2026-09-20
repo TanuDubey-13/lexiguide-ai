@@ -57,7 +57,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
+            <div className="flex items-center gap-2 text-xs text-slate-300">
               <span>{document.type}</span>
               <span>•</span>
               <span>{document.pageCount} pages</span>
@@ -73,15 +73,17 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
           <button
             onClick={handleDownload}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
             title="Download document copy"
+            aria-label="Download document copy"
           >
             <Download className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => navigate('/ask')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C49A3A] hover:bg-[#B38928] text-[#0B1F33] text-xs font-bold transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C49A3A] hover:bg-[#B38928] text-[#0B1F33] text-xs font-bold transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
+            aria-label="Ask AI about this document"
           >
             <MessageCircle className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Ask AI</span>
@@ -89,8 +91,9 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
           <button
             onClick={onResetDocument}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors text-xs"
+            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
             title="Upload or change document"
+            aria-label="Upload or change document"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -163,7 +166,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
         <div className="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-subtle border border-[#E2E8F0] space-y-6">
           {/* Document Header */}
           <div className="text-center pb-6 border-b border-[#E2E8F0] space-y-1">
-            <span className="text-[10px] font-bold tracking-widest text-[#94A3B8] uppercase">
+            <span className="text-[10px] font-bold tracking-widest text-[#64748B] uppercase">
               FICTIONAL DEMO DOCUMENT
             </span>
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#0B1F33]">
@@ -187,13 +190,23 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 <div key={sec.sectionNumber} className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-sans font-bold text-[#64748B]">
                     <span>{sec.sectionNumber} — {sec.heading}</span>
-                    <span className="text-[10px] text-[#94A3B8]">Page {sec.page}</span>
+                    <span className="text-[10px] text-[#64748B] font-mono">Page {sec.page}</span>
                   </div>
 
                   {matchedClause ? (
                     <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Explain clause: ${matchedClause.title}`}
+                      aria-haspopup="dialog"
                       onClick={() => onSelectClause(matchedClause)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer relative group ${
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onSelectClause(matchedClause);
+                        }
+                      }}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer relative group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3A] ${
                         isSelected
                           ? 'ring-2 ring-[#C49A3A] bg-amber-50/60 border-[#C49A3A] shadow-card'
                           : matchedClause.category === 'important'
@@ -252,7 +265,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
             })}
           </div>
 
-          <div className="pt-8 border-t border-[#E2E8F0] text-center text-xs text-[#94A3B8] font-sans">
+          <div className="pt-8 border-t border-[#E2E8F0] text-center text-xs text-[#64748B] font-sans">
             End of Document Preview • {document.fullTextSections.length} Sections Loaded
           </div>
         </div>

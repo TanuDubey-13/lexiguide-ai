@@ -48,11 +48,14 @@ export const ResourcesPage: React.FC = () => {
         <div className="relative">
           <Search className="w-5 h-5 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            id="search-resources-input"
+            name="search-resources-input"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search guides by topic, contract type, or keyword (e.g. lease, deposit, liability)..."
-            className="w-full bg-[#FAF9F5] border border-[#CBD5E1] text-[#102A43] placeholder-[#94A3B8] rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#102A43]/15 focus:border-[#102A43] transition-all"
+            aria-label="Search guides by topic, contract type, or keyword"
+            className="w-full bg-[#FAF9F5] border border-[#CBD5E1] text-[#102A43] placeholder-[#64748B] rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#102A43]/15 focus:border-[#102A43] transition-all"
           />
         </div>
 
@@ -63,7 +66,7 @@ export const ResourcesPage: React.FC = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
                 selectedCategory === cat
                   ? 'bg-[#102A43] text-white shadow-xs'
                   : 'bg-[#F1EFE9] text-[#64748B] hover:text-[#102A43] hover:bg-[#EAE5D9]'
@@ -84,7 +87,7 @@ export const ResourcesPage: React.FC = () => {
         </div>
       ) : (
         <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-[#CBD5E1] space-y-2">
-          <BookOpen className="w-8 h-8 text-[#94A3B8] mx-auto" />
+          <BookOpen className="w-8 h-8 text-[#64748B] mx-auto" />
           <h3 className="text-base font-bold text-[#102A43]">No guides found</h3>
           <p className="text-xs text-[#64748B]">Try clearing your search query or selecting "All".</p>
         </div>

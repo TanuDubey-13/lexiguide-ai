@@ -37,13 +37,13 @@ export const Footer: React.FC = () => {
               "Legal documents, explained for you."
             </p>
 
-            <p className="text-[#94A3B8] text-sm leading-relaxed max-w-md">
+            <p className="text-slate-300 text-sm leading-relaxed max-w-md">
               Democratizing legal comprehension. Transform dense contracts, agreements, and policies into plain language, spot hidden obligations, compare versions, and prepare with confidence.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <DemoModeBadge compact />
-              <span className="text-xs text-[#94A3B8]/80 flex items-center gap-1">
+              <span className="text-xs text-slate-300 flex items-center gap-1">
                 <Scale className="w-3.5 h-3.5 text-[#C49A3A]" />
                 GenAI Hackathon Challenge: Legal Assistance & Access
               </span>
@@ -55,7 +55,7 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#C49A3A]">
               Navigation
             </h4>
-            <ul className="space-y-2 text-sm text-[#94A3B8]">
+            <ul className="space-y-2 text-sm text-slate-300">
               <li>
                 <Link to="/analyze" className="hover:text-white transition-colors flex items-center gap-1">
                   Document Analysis
@@ -89,7 +89,7 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#C49A3A]">
               Responsible AI
             </h4>
-            <ul className="space-y-2 text-sm text-[#94A3B8]">
+            <ul className="space-y-2 text-sm text-slate-300">
               <li className="flex items-start gap-2">
                 <Shield className="w-4 h-4 text-[#C49A3A] mt-0.5 flex-shrink-0" />
                 <span>Does not replace professional legal counsel</span>
@@ -116,8 +116,8 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Disclaimer & Copyright */}
-        <div className="mt-12 pt-8 border-t border-[#1E3A5F]/70 text-xs text-[#94A3B8] flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-center md:text-left max-w-2xl text-[#94A3B8]">
+        <div className="mt-12 pt-8 border-t border-[#1E3A5F]/70 text-xs text-slate-300 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-center md:text-left max-w-2xl text-slate-300">
             <p>
               <strong className="text-white">Legal Disclaimer:</strong> LexiGuide AI provides general informational assistance and document summarization. It is not a law firm, does not provide legal advice, and does not create an attorney-client relationship. Always verify critical terms with a licensed attorney.
             </p>

@@ -24,12 +24,14 @@ interface DocumentQaChatProps {
   document: LegalDocument;
   initialMessages?: QAMessage[];
   prefilledQuery?: string;
+  autoSubmit?: boolean;
 }
 
 export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
   document,
   initialMessages = [],
   prefilledQuery = '',
+  autoSubmit = false,
 }) => {
   const { reuploadCurrentDocument, backendStatus, refreshBackendStatus } = useDocument();
   const [messages, setMessages] = useState<QAMessage[]>(initialMessages);
@@ -37,6 +39,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isReuploading, setIsReuploading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasAutoSubmittedRef = useRef(false);
 
   const suggestedQuestions = [
     'What happens if I terminate early?',
@@ -56,8 +59,12 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
   useEffect(() => {
     if (prefilledQuery) {
       setInputText(prefilledQuery);
+      if (autoSubmit && !hasAutoSubmittedRef.current) {
+        hasAutoSubmittedRef.current = true;
+        handleSend(prefilledQuery);
+      }
     }
-  }, [prefilledQuery]);
+  }, [prefilledQuery, autoSubmit]);
 
   const handleSend = async (queryText?: string) => {
     const textToSend = queryText || inputText;
@@ -144,7 +151,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-base tracking-wide">Ask your documents</h2>
+              <h2 className="font-bold text-base tracking-wide">Document-Grounded AI</h2>
               {isLiveBackendActive ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -156,11 +163,11 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                 </span>
               ) : (
                 <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/10 text-white/80">
-                  Indexed
+                  Document-Grounded Mode
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
+            <div className="flex items-center gap-2 text-xs text-slate-300">
               <FileText className="w-3.5 h-3.5 text-[#C49A3A]" />
               <span className="font-mono text-white/90">{document.name}</span>
               <span>•</span>
@@ -174,8 +181,9 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
           {messages.length > 0 && (
             <button
               onClick={handleClearChat}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors text-xs flex items-center gap-1 cursor-pointer"
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors text-xs flex items-center gap-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title="Clear conversation"
+              aria-label="Clear conversation history"
             >
               <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Clear</span>
@@ -207,7 +215,12 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
       </div>
 
       {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-[#FDFBF7]">
+      <div
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-[#FDFBF7]"
+        role="log"
+        aria-live="polite"
+        aria-label="Document Q&A Conversation"
+      >
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#64748B] space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-[#102A43]/5 flex items-center justify-center text-[#102A43]">
@@ -270,7 +283,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                         </>
                       ) : null}
                     </div>
-                    <span className="text-[10px] text-[#94A3B8]">{msg.timestamp}</span>
+                    <span className="text-[10px] text-[#64748B]">{msg.timestamp}</span>
                   </div>
 
                   {/* Gemini Rate-Limited / Unavailable Notice */}
@@ -286,9 +299,9 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                     </div>
                   )}
 
-                  {/* Plain Language Answer */}
+                  {/* 1. Plain Language Answer */}
                   <div className="space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#475569]">
                       Answer
                     </span>
                     <SafeMarkdown content={msg.text} />
@@ -315,35 +328,42 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                     </div>
                   )}
 
-                  {/* Grounded Source References */}
+                  {/* 2 & 3. Source from uploaded document & Grounded document context */}
                   {((msg.sources && msg.sources.length > 0) || msg.sourceReference) && (
-                    <div className="bg-[#FAF9F5] rounded-xl p-3.5 border border-[#E2E8F0] space-y-2.5">
+                    <div className="bg-[#FAF9F5] rounded-xl p-3.5 border border-[#E2E8F0] space-y-3">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-[#102A43] flex items-center gap-1.5">
                           <Bookmark className="w-3.5 h-3.5 text-[#C49A3A]" />
-                          Sources from your uploaded document:
+                          Source from uploaded document
                         </span>
                         <span className="text-[10px] text-[#64748B] font-mono">
-                          Page attribution
+                          Page reference
                         </span>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {(msg.sources && msg.sources.length > 0 ? msg.sources : [msg.sourceReference!]).map(
                           (source, idx) => (
-                            <div key={idx} className="border-l-2 border-[#C49A3A] pl-3 py-1 space-y-1">
-                              <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
-                                <span className="font-bold text-[#102A43] font-mono">Page {source.page}</span>
-                                {source.clauseTitle && <span>• {source.clauseTitle}</span>}
+                            <div key={idx} className="bg-white rounded-lg p-3 border-l-4 border-[#C49A3A] border border-[#E2E8F0] shadow-2xs space-y-1.5">
+                              <div className="flex items-center justify-between gap-2 text-[11px] text-[#64748B]">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-[#102A43] font-mono bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#CBD5E1]">Page reference: Page {source.page}</span>
+                                  {source.clauseTitle && <span className="font-medium text-[#334E68]">• {source.clauseTitle}</span>}
+                                </div>
                                 {typeof source.relevanceScore === 'number' && (
-                                  <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                                    {Math.round(source.relevanceScore * 100)}% relevance
+                                  <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                    {Math.round(source.relevanceScore * 100)}% match
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs font-serif text-[#334E68] italic leading-relaxed">
-                                "{source.textSnippet}"
-                              </p>
+                              <div className="space-y-0.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                                  Grounded document context:
+                                </span>
+                                <p className="text-xs font-serif text-[#334E68] italic leading-relaxed pl-2.5 border-l-2 border-[#CBD5E1]">
+                                  "{source.textSnippet}"
+                                </p>
+                              </div>
                             </div>
                           )
                         )}
@@ -371,13 +391,13 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                     </div>
                   )}
 
-                  {/* Backend Legal Disclaimer */}
-                  {msg.disclaimer && (
-                    <div className="pt-2 border-t border-[#F1EFE9] text-[11px] text-[#64748B] italic flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                      <span>{msg.disclaimer}</span>
-                    </div>
-                  )}
+                  {/* 4. Legal Disclaimer */}
+                  <div className="pt-2 border-t border-[#F1EFE9] text-[11px] text-[#64748B] italic flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                    <span>
+                      {msg.disclaimer || "Document-grounded AI assistance for informational purposes. Always consult a qualified attorney for legal counsel."}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -386,7 +406,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
 
         {/* Loading Indicator */}
         {isLoading && (
-          <div className="flex items-start max-w-lg">
+          <div className="flex items-start max-w-lg" role="status" aria-live="polite">
             <div className="bg-white border border-[#E2E8F0] rounded-2xl rounded-tl-xs p-4 shadow-subtle flex items-center gap-3">
               <Sparkles className="w-4 h-4 text-[#C49A3A] animate-spin" />
               <span className="text-xs font-medium text-[#64748B]">
@@ -411,6 +431,8 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
           className="flex items-center gap-2"
         >
           <input
+            id="qa-document-input"
+            name="qa-document-input"
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -419,20 +441,21 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                 ? `Ask Gemini 3.6 Flash about "${document.name}"...`
                 : `Ask anything about "${document.name}"...`
             }
+            aria-label={`Ask a question about ${document.name}`}
             disabled={isLoading}
-            className="flex-1 bg-[#FAF9F5] border border-[#CBD5E1] focus:border-[#102A43] text-sm text-[#102A43] placeholder-[#94A3B8] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#102A43]/15 transition-all"
+            className="flex-1 bg-[#FAF9F5] border border-[#CBD5E1] focus:border-[#102A43] text-sm text-[#102A43] placeholder-[#64748B] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#102A43]/15 transition-all"
           />
           <button
             type="submit"
             disabled={!inputText.trim() || isLoading}
-            className="px-5 py-3 rounded-xl bg-[#102A43] hover:bg-[#0B1F33] text-white text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer active:scale-95"
-            aria-label="Send message"
+            className="px-5 py-3 rounded-xl bg-[#102A43] hover:bg-[#0B1F33] text-white text-sm font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43]"
+            aria-label="Send question"
           >
             <Send className="w-4 h-4 text-[#C49A3A]" />
             <span className="hidden sm:inline">Ask</span>
           </button>
         </form>
-        <p className="text-[11px] text-[#94A3B8] mt-2 text-center">
+        <p className="text-[11px] text-[#64748B] mt-2 text-center">
           Answers are generated from the uploaded document text. Verify with a legal professional.
         </p>
       </div>

@@ -11,15 +11,30 @@ interface ClauseDetailDrawerProps {
 export const ClauseDetailDrawer: React.FC<ClauseDetailDrawerProps> = ({ clause, onClose }) => {
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!clause) return null;
 
   const handleAskFollowUp = () => {
     const question = clause.questionsToAsk[0] || `Can you explain more about ${clause.title}?`;
-    navigate('/ask', { state: { prefilledQuery: question } });
+    navigate('/ask', { state: { prefilledQuery: question, autoSubmit: true } });
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="clause-drawer-title"
+      className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200"
+    >
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -39,14 +54,14 @@ export const ClauseDetailDrawer: React.FC<ClauseDetailDrawerProps> = ({ clause, 
                   {clause.category}
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-white font-sans">{clause.title}</h2>
-              <p className="text-xs text-[#94A3B8]">Clause Explanation & Plain Language Breakdown</p>
+              <h2 id="clause-drawer-title" className="text-xl font-bold text-white font-sans">{clause.title}</h2>
+              <p className="text-xs text-slate-300">Clause Explanation & Plain Language Breakdown</p>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-              aria-label="Close drawer"
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Close clause details drawer"
             >
               <X className="w-5 h-5" />
             </button>

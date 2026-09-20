@@ -27,7 +27,7 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
   const [activeTab, setActiveTab] = useState<'clauses' | 'review' | 'obligations' | 'questions'>('clauses');
 
   const handleAskQuestion = (question: string) => {
-    navigate('/ask', { state: { prefilledQuery: question } });
+    navigate('/ask', { state: { prefilledQuery: question, autoSubmit: true } });
   };
 
   return (
@@ -46,7 +46,8 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
 
         <button
           onClick={onOpenChecklist}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#0B1F33] text-white text-xs font-semibold shadow-xs transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#0B1F33] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43]"
+          aria-label="Open Action Checklist"
         >
           <ClipboardList className="w-3.5 h-3.5 text-[#C49A3A]" />
           <span>Action Checklist</span>
@@ -83,10 +84,18 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 flex border-b border-[#E2E8F0] bg-[#FAF9F5] text-xs font-medium px-2 pt-2">
+      <div
+        role="tablist"
+        aria-label="Analysis sections"
+        className="flex-shrink-0 flex border-b border-[#E2E8F0] bg-[#FAF9F5] text-xs font-medium px-2 pt-2"
+      >
         <button
+          role="tab"
+          id="tab-clauses"
+          aria-selected={activeTab === 'clauses'}
+          aria-controls="panel-clauses"
           onClick={() => setActiveTab('clauses')}
-          className={`flex-1 py-2.5 text-center border-b-2 transition-colors ${
+          className={`flex-1 py-2.5 text-center border-b-2 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
             activeTab === 'clauses'
               ? 'border-[#102A43] text-[#102A43] font-bold'
               : 'border-transparent text-[#64748B] hover:text-[#102A43]'
@@ -95,8 +104,12 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
           Key Clauses ({analysis.keyClauses.length})
         </button>
         <button
+          role="tab"
+          id="tab-review"
+          aria-selected={activeTab === 'review'}
+          aria-controls="panel-review"
           onClick={() => setActiveTab('review')}
-          className={`flex-1 py-2.5 text-center border-b-2 transition-colors ${
+          className={`flex-1 py-2.5 text-center border-b-2 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
             activeTab === 'review'
               ? 'border-[#102A43] text-[#102A43] font-bold'
               : 'border-transparent text-[#64748B] hover:text-[#102A43]'
@@ -105,8 +118,12 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
           Things to Review ({analysis.thingsToReview.length})
         </button>
         <button
+          role="tab"
+          id="tab-obligations"
+          aria-selected={activeTab === 'obligations'}
+          aria-controls="panel-obligations"
           onClick={() => setActiveTab('obligations')}
-          className={`flex-1 py-2.5 text-center border-b-2 transition-colors ${
+          className={`flex-1 py-2.5 text-center border-b-2 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
             activeTab === 'obligations'
               ? 'border-[#102A43] text-[#102A43] font-bold'
               : 'border-transparent text-[#64748B] hover:text-[#102A43]'
@@ -115,8 +132,12 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
           Obligations ({analysis.obligations.length})
         </button>
         <button
+          role="tab"
+          id="tab-questions"
+          aria-selected={activeTab === 'questions'}
+          aria-controls="panel-questions"
           onClick={() => setActiveTab('questions')}
-          className={`flex-1 py-2.5 text-center border-b-2 transition-colors ${
+          className={`flex-1 py-2.5 text-center border-b-2 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
             activeTab === 'questions'
               ? 'border-[#102A43] text-[#102A43] font-bold'
               : 'border-transparent text-[#64748B] hover:text-[#102A43]'
@@ -130,28 +151,43 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
         {/* Tab 1: Key Clauses */}
         {activeTab === 'clauses' && (
-          <div className="space-y-3">
+          <div
+            role="tabpanel"
+            id="panel-clauses"
+            aria-labelledby="tab-clauses"
+            className="space-y-3"
+          >
             <p className="text-xs text-[#64748B]">
               Click any clause to inspect its plain-language translation and legal check criteria:
             </p>
             {analysis.keyClauses.map((clause) => (
               <div
                 key={clause.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Inspect clause ${clause.title}`}
+                aria-haspopup="dialog"
                 onClick={() => onSelectClause(clause)}
-                className="p-3.5 rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] bg-white hover:bg-[#FAF9F5] cursor-pointer transition-all duration-150 group shadow-subtle flex items-start justify-between gap-3"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectClause(clause);
+                  }
+                }}
+                className="p-3.5 rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] bg-white hover:bg-[#FAF9F5] cursor-pointer transition-all duration-150 group shadow-subtle flex items-start justify-between gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43]"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-[#102A43] group-hover:text-[#C49A3A] transition-colors">
                       {clause.title}
                     </span>
-                    <span className="text-[10px] text-[#94A3B8] font-mono">{clause.sectionNumber}</span>
+                    <span className="text-[10px] text-[#64748B] font-mono">{clause.sectionNumber}</span>
                   </div>
                   <p className="text-xs text-[#64748B] line-clamp-2">
                     {clause.plainExplanation}
                   </p>
                 </div>
-                <div className="p-1 rounded-md text-[#94A3B8] group-hover:text-[#102A43] group-hover:bg-[#EAE5D9] transition-colors mt-1">
+                <div className="p-1 rounded-md text-[#64748B] group-hover:text-[#102A43] group-hover:bg-[#EAE5D9] transition-colors mt-1">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
@@ -161,7 +197,12 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
 
         {/* Tab 2: Things to Review */}
         {activeTab === 'review' && (
-          <div className="space-y-3">
+          <div
+            role="tabpanel"
+            id="panel-review"
+            aria-labelledby="tab-review"
+            className="space-y-3"
+          >
             <p className="text-xs text-[#64748B]">
               Provisions flagged for caution, unusual obligations, or risk of financial penalty:
             </p>
@@ -189,7 +230,12 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
 
         {/* Tab 3: Your Obligations */}
         {activeTab === 'obligations' && (
-          <div className="space-y-3">
+          <div
+            role="tabpanel"
+            id="panel-obligations"
+            aria-labelledby="tab-obligations"
+            className="space-y-3"
+          >
             <p className="text-xs text-[#64748B]">
               Contractual duties categorized by responsible actor:
             </p>
@@ -222,7 +268,12 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
 
         {/* Tab 4: Potential Questions */}
         {activeTab === 'questions' && (
-          <div className="space-y-3">
+          <div
+            role="tabpanel"
+            id="panel-questions"
+            aria-labelledby="tab-questions"
+            className="space-y-3"
+          >
             <p className="text-xs text-[#64748B]">
               Recommended questions to ask your counterparty or legal advisor:
             </p>
@@ -239,8 +290,9 @@ export const AnalysisSidebar: React.FC<AnalysisSidebarProps> = ({
                 </div>
                 <button
                   onClick={() => handleAskQuestion(q)}
-                  className="px-2 py-1 rounded bg-[#F1EFE9] hover:bg-[#102A43] hover:text-white text-[#102A43] text-[11px] font-semibold transition-colors flex items-center gap-1 flex-shrink-0"
+                  className="px-2.5 py-1 rounded bg-[#F1EFE9] hover:bg-[#102A43] hover:text-white text-[#102A43] text-[11px] font-semibold transition-colors flex items-center gap-1 flex-shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43]"
                   title="Ask this question in Ask AI"
+                  aria-label={`Ask AI about: ${q}`}
                 >
                   <MessageCircle className="w-3 h-3" />
                   <span>Ask AI</span>

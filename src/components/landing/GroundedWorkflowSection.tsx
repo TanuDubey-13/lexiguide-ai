@@ -79,7 +79,7 @@ export const GroundedWorkflowSection: React.FC = () => {
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-mono text-xs font-bold text-[#94A3B8]">
+                    <span className="font-mono text-xs font-bold text-[#64748B]">
                       0{index + 1}
                     </span>
                     <div
@@ -128,7 +128,7 @@ export const GroundedWorkflowSection: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <span className="text-[11px] font-mono text-[#94A3B8]">Grounded Q&amp;A Example</span>
+              <span className="text-[11px] font-mono text-[#64748B]">Grounded Q&amp;A Example</span>
             </div>
 
             {/* QUESTION */}
@@ -170,7 +170,7 @@ export const GroundedWorkflowSection: React.FC = () => {
 
             {/* Card Footer: Label & CTA */}
             <div className="pt-3 border-t border-[#F1EFE9] flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p className="text-[11px] text-[#94A3B8] italic text-center sm:text-left">
+              <p className="text-[11px] text-[#64748B] italic text-center sm:text-left">
                 Example using the fictional Residential Rental Agreement
               </p>
               <Link

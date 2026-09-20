@@ -87,7 +87,7 @@ export const ActionChecklistPanel: React.FC<ActionChecklistPanelProps> = ({
             <CheckSquare2 className="w-5 h-5 text-[#C49A3A]" />
             <h2 className="text-xl font-bold font-sans">Your document checklist</h2>
           </div>
-          <p className="text-xs text-[#94A3B8]">
+          <p className="text-xs text-slate-300">
             Action items and lawyer preparation tailored for <span className="text-white font-medium">{documentName}</span>
           </p>
         </div>
@@ -167,30 +167,39 @@ export const ActionChecklistPanel: React.FC<ActionChecklistPanelProps> = ({
             {items.map((item) => (
               <div
                 key={item.id}
+                role="checkbox"
+                tabIndex={0}
+                aria-checked={item.completed}
+                aria-label={`Checklist item: ${item.text}`}
                 onClick={() => toggleItem(item.id)}
-                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleItem(item.id);
+                  }
+                }}
+                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43] ${
                   item.completed
                     ? 'bg-[#FAF9F5] border-[#E2E8F0] text-[#64748B]'
                     : 'bg-white border-[#CBD5E1] hover:border-[#102A43] shadow-subtle'
                 }`}
               >
-                <button
-                  type="button"
+                <div
                   className="mt-0.5 text-[#102A43] flex-shrink-0"
-                  aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
+                  aria-hidden="true"
                 >
                   {item.completed ? (
                     <CheckSquare2 className="w-5 h-5 text-emerald-600" />
                   ) : (
-                    <Square className="w-5 h-5 text-[#94A3B8]" />
+                    <Square className="w-5 h-5 text-[#64748B]" />
                   )}
-                </button>
+                </div>
 
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
                     <span
                       className={`text-sm font-medium ${
-                        item.completed ? 'line-through text-[#94A3B8]' : 'text-[#102A43]'
+                        item.completed ? 'line-through text-[#64748B]' : 'text-[#102A43]'
                       }`}
                     >
                       {item.text}

@@ -137,7 +137,7 @@ export const AboutPage: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-bold">
             Responsible AI Principles in Practice
           </h2>
-          <p className="text-sm text-[#94A3B8]">
+          <p className="text-sm text-slate-300">
             How we protect users and maintain absolute transparency around AI capabilities and limitations.
           </p>
         </div>
@@ -155,7 +155,7 @@ export const AboutPage: React.FC = () => {
                 <h4 className="text-sm sm:text-base font-bold text-white">
                   {item.title}
                 </h4>
-                <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                   {item.description}
                 </p>
               </div>

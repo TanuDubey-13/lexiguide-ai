@@ -55,8 +55,18 @@ export const ClauseDiffTable: React.FC<ClauseDiffTableProps> = ({ diffs }) => {
               return (
                 <React.Fragment key={diff.id}>
                   <tr
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    aria-label={`Clause difference for ${diff.clauseTitle}: click or press enter to toggle explanation`}
                     onClick={() => toggleExpand(diff.id)}
-                    className={`hover:bg-[#FAF9F5] cursor-pointer transition-colors ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleExpand(diff.id);
+                      }
+                    }}
+                    className={`hover:bg-[#FAF9F5] cursor-pointer transition-colors focus:outline-none focus-visible:bg-[#FAF9F5] focus-visible:ring-2 focus-visible:ring-[#102A43] ${
                       isExpanded ? 'bg-[#FAF9F5]' : ''
                     }`}
                   >
@@ -84,7 +94,7 @@ export const ClauseDiffTable: React.FC<ClauseDiffTableProps> = ({ diffs }) => {
                     <td className="py-4 px-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getBadgeStyle(
-                          diff.changeType
+                            diff.changeType
                         )}`}
                       >
                         {diff.changeType.charAt(0).toUpperCase() + diff.changeType.slice(1)}
@@ -97,8 +107,9 @@ export const ClauseDiffTable: React.FC<ClauseDiffTableProps> = ({ diffs }) => {
                           e.stopPropagation();
                           toggleExpand(diff.id);
                         }}
-                        className="p-1 rounded-md text-[#64748B] hover:text-[#102A43] hover:bg-[#EAE5D9] transition-colors"
-                        aria-label="Toggle clause analysis"
+                        className="p-1 rounded-md text-[#64748B] hover:text-[#102A43] hover:bg-[#EAE5D9] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102A43]"
+                        aria-label={isExpanded ? `Collapse analysis for ${diff.clauseTitle}` : `Expand analysis for ${diff.clauseTitle}`}
+                        aria-expanded={isExpanded}
                       >
                         {isExpanded ? (
                           <ChevronUp className="w-4 h-4" />
