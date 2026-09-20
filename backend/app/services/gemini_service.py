@@ -99,6 +99,8 @@ def summarize_sentence_topic(sent: str) -> str:
         return 'subletting restrictions'
     elif 'alteration' in sent_lower or 'paint' in sent_lower:
         return 'alteration restrictions'
+    elif 'utilit' in sent_lower or 'electr' in sent_lower:
+        return 'utility clearance and maintenance provisions'
     else:
         words = [w for w in tokenize(sent) if w not in STOP_WORDS and len(w) > 3]
         return ' '.join(words[:3]) if words else 'other lease obligations'

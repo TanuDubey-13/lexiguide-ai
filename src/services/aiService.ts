@@ -128,7 +128,7 @@ export async function askDocument(
         sender: 'ai',
         text: response.answer,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sourceReference: mappedSources[0],
+        sourceReference: mappedSources.length > 0 ? mappedSources[0] : undefined,
         sources: mappedSources,
         disclaimer: response.disclaimer,
         isRealBackend: true,
@@ -211,21 +211,36 @@ export async function askDocument(
       },
       relatedSections: ['Section 2 (Term & Renewal)', 'Section 4 (Security Deposit)']
     };
-  } else {
-    // General grounded response
+  } else if (
+    lower.includes('electric') ||
+    lower.includes('utilit') ||
+    lower.includes('power') ||
+    (lower.includes('bill') && (lower.includes('late') || lower.includes('penalty') || lower.includes('pay')))
+  ) {
     return {
       id: `qa-${Date.now()}`,
       sender: 'ai',
-      text: `Based on the uploaded demo agreement provisions, the document defines obligations, notice periods, and dispute resolution channels. For questions regarding "${query}", please review the relevant clauses or clarify with a legal professional.`,
+      text: 'The uploaded document does not contain enough information to determine the penalty for late payment of electricity bills. While Section 4 and Section 5 establish obligations regarding utility clearance, utility arrears, and electrical circuitry maintenance, the agreement does not specify a late-payment penalty or financial surcharge for electricity bills. LexiGuide will not infer or invent a penalty that is not stated in the document.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       sourceReference: {
         documentName: 'Residential_Rental_Agreement.pdf',
-        page: 6,
-        section: 'Section 12',
-        clauseTitle: 'Governing Law and Dispute Resolution',
-        textSnippet: 'This Agreement shall be governed by and construed in accordance with jurisdictional laws. Any dispute shall first be submitted to mutual amicable mediation.'
+        page: 2,
+        section: 'Section 4 & Section 5',
+        clauseTitle: 'Security Deposit & Maintenance (Utility Provisions)',
+        textSnippet: 'The Security Deposit shall be returned to the Tenant within thirty (30) business days following full handover of the Premises, keys, and proof of utility clearance, subject to reasonable itemized deductions for documented physical damages exceeding normal wear and tear, unpaid rent, or utility arrears.'
       },
-      relatedSections: ['Section 7 (Termination)', 'Section 11 (Indemnification)']
+      relatedSections: ['Section 4 (Security Deposit)', 'Section 5 (Maintenance Responsibilities)']
+    };
+  } else {
+    // Unsupported question with no sufficiently relevant passage: refuse to invent, do not display unrelated citations
+    return {
+      id: `qa-${Date.now()}`,
+      sender: 'ai',
+      text: `The uploaded document does not contain enough information to answer "${query}". LexiGuide will not infer or invent provisions, penalties, or obligations that are not explicitly stated in the document. Please consult a qualified legal professional for matters not addressed in the agreement.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      sourceReference: undefined,
+      sources: [],
+      relatedSections: []
     };
   }
 }

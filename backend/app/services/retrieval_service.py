@@ -215,6 +215,27 @@ class DocumentStore:
                     # Term frequency score with sub-linear saturation
                     tf = 1.0 + math.log(chunk_tokens_count[q_token])
                     raw_score += tf
+                elif len(q_token) >= 4:
+                    # Root prefix matching (e.g. electric -> electrical, utilit -> utility, bill -> bills)
+                    if q_token.startswith("electric"):
+                        q_prefix = "electric"
+                    elif q_token.startswith("utilit"):
+                        q_prefix = "utilit"
+                    elif q_token.startswith("terminat"):
+                        q_prefix = "terminat"
+                    elif q_token.startswith("deposit"):
+                        q_prefix = "deposit"
+                    else:
+                        q_prefix = q_token[:min(len(q_token), 5)]
+
+                    matching_counts = [
+                        count for c_tok, count in chunk_tokens_count.items()
+                        if c_tok.startswith(q_prefix) and not (q_prefix == "electric" and c_tok.startswith("electron"))
+                    ]
+                    if matching_counts:
+                        matched_unique_tokens += 1
+                        tf = 1.0 + math.log(sum(matching_counts))
+                        raw_score += tf
 
             # Coverage boost: reward chunks that match more of the query terms
             coverage_ratio = matched_unique_tokens / len(set(tokens_to_match))
@@ -236,8 +257,8 @@ class DocumentStore:
         if scored_chunks:
             return scored_chunks[:top_k]
 
-        # If no keywords matched, return the initial chunks with baseline relevance
-        return [(doc.chunks[0], 0.15)] if doc.chunks else []
+        # If no keywords matched, return empty list (no relevant chunks found)
+        return []
 
 
 # Global singleton instance

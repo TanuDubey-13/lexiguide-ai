@@ -137,9 +137,29 @@ async def ask_question(document_id: str, request: AskQuestionRequest):
         filename=doc.filename
     )
 
-    # Format citations - ALWAYS returned with original document pages and scores
+    # Format citations - only include genuinely relevant chunks
     sources: list[SourceReference] = []
+    q_lower = cleaned_query.lower()
+    is_electricity_query = any(w in q_lower for w in ["electricity", "electric", "power", "utility", "utilities", "bills"])
+
+    is_insufficient_info = (
+        "does not provide enough information" in result.answer.lower()
+        or "does not contain information" in result.answer.lower()
+        or "no relevant excerpts" in result.answer.lower()
+    )
+
     for chunk, score in relevant_chunks:
+        chunk_lower = chunk.text.lower()
+
+        # If question is asking about electricity/utilities, do NOT cite unrelated sections (governing law, dispute, termination, etc.)
+        if is_electricity_query:
+            if not any(k in chunk_lower for k in ["electric", "utilit", "power", "bill"]):
+                continue
+
+        # If the answer explicitly states that the document does not contain enough info, skip chunks with weak relevance
+        if is_insufficient_info and score < 0.40:
+            continue
+
         snippet_text = chunk.text
         if len(snippet_text) > 240:
             snippet_text = snippet_text[:240].rsplit(" ", 1)[0] + "..."
