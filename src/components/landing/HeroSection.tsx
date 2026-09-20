@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, FileText, ArrowRight, GitCompare, ShieldCheck } from 'lucide-react';
+import { Sparkles, FileText, ArrowRight, MessageCircle, ShieldCheck } from 'lucide-react';
 import { useDocument } from '../../context/DocumentContext';
 
 export const HeroSection: React.FC = () => {
@@ -22,7 +22,7 @@ export const HeroSection: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#E2E8F0] shadow-subtle mb-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
           <Sparkles className="w-4 h-4 text-[#C49A3A]" />
           <span className="text-xs font-semibold tracking-wider uppercase text-[#102A43]">
-            AI-POWERED LEGAL DOCUMENT ASSISTANCE
+            AI-POWERED LEGAL ASSISTANCE
           </span>
         </div>
 
@@ -36,11 +36,11 @@ export const HeroSection: React.FC = () => {
 
         {/* Supporting text */}
         <p className="text-lg sm:text-xl text-[#64748B] max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-          Understand complex legal language, compare documents, and discover important clauses with AI assistance.
+          Understand complex legal language, identify important obligations, compare documents, and ask grounded questions about your document with AI assistance.
         </p>
 
         {/* Primary & Secondary CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto mb-8">
           <Link
             to="/analyze"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#102A43] hover:bg-[#0B1F33] text-white font-semibold text-base shadow-card hover:shadow-card-hover transition-all duration-200 active:scale-98"
@@ -51,11 +51,11 @@ export const HeroSection: React.FC = () => {
           </Link>
 
           <Link
-            to="/compare"
+            to="/ask"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-[#F1EFE9] text-[#102A43] border border-[#CBD5E1] font-semibold text-base shadow-subtle hover:border-[#102A43] transition-all duration-200"
           >
-            <GitCompare className="w-5 h-5 text-[#102A43]" />
-            <span>Compare Documents</span>
+            <MessageCircle className="w-5 h-5 text-[#C49A3A]" />
+            <span>Ask AI About Your Document</span>
           </Link>
         </div>
 

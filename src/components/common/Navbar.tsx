@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Sparkles, Menu, X, ArrowUpRight } from 'lucide-react';
-import { DemoModeBadge } from './DemoModeBadge';
 import { useDocument } from '../../context/DocumentContext';
 
 export const Navbar: React.FC = () => {
@@ -77,9 +76,16 @@ export const Navbar: React.FC = () => {
             ))}
           </nav>
 
-          {/* Right side: Demo badge & Get Started CTA */}
+          {/* Right side: AI Q&A Live badge & Get Started CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <DemoModeBadge compact />
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs"
+              title="Live document-grounded Gemini Q&A"
+              aria-label="Live document-grounded Gemini Q&A"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              AI Q&A LIVE
+            </span>
             <button
               onClick={handleGetStarted}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#102A43] hover:bg-[#0B1F33] text-white text-sm font-semibold shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] border border-[#102A43]"
@@ -91,7 +97,14 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="flex items-center gap-2 md:hidden">
-            <DemoModeBadge compact />
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs"
+              title="Live document-grounded Gemini Q&A"
+              aria-label="Live document-grounded Gemini Q&A"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              AI Q&A LIVE
+            </span>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-[#102A43] hover:bg-[#EAE5D9] focus:outline-none focus:ring-2 focus:ring-[#102A43]"
