@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, ArrowRight, AlertTriangle, Loader2 } from 'lucide-react';
 import { useDocument } from '../../context/DocumentContext';
 import { DocumentTypeSelector } from '../common/DocumentTypeSelector';
 import { DocumentType } from '../../types/legal';
@@ -9,8 +9,18 @@ interface DocumentUploadDropzoneProps {
 }
 
 export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ onUploadSuccess }) => {
-  const { uploadCustomDocument, loadDemoDocument, documentType, setDocumentType } = useDocument();
+  const {
+    uploadCustomDocument,
+    loadDemoDocument,
+    documentType,
+    setDocumentType,
+    isUploading,
+    uploadError,
+    backendStatus,
+  } = useDocument();
+
   const [isDragging, setIsDragging] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -22,28 +32,40 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
     setIsDragging(false);
   };
 
+  const processFile = async (file: File) => {
+    setLocalError(null);
+    try {
+      await uploadCustomDocument(file, documentType);
+      if (onUploadSuccess) onUploadSuccess();
+    } catch (err: any) {
+      console.error('Document upload failed:', err);
+      setLocalError(err.detail || err.message || 'Failed to upload document.');
+    }
+  };
+
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      await uploadCustomDocument(file.name, documentType);
-      if (onUploadSuccess) onUploadSuccess();
+      await processFile(file);
     }
   };
 
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      await uploadCustomDocument(file.name, documentType);
-      if (onUploadSuccess) onUploadSuccess();
+      await processFile(file);
     }
   };
 
   const handleSampleClick = async () => {
+    setLocalError(null);
     await loadDemoDocument();
     if (onUploadSuccess) onUploadSuccess();
   };
+
+  const displayedError = localError || uploadError;
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
@@ -57,6 +79,17 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
         </p>
       </div>
 
+      {/* Error Banner */}
+      {displayedError && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm flex items-start gap-3 animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold">Upload Notice:</span>
+            <p>{displayedError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Document Type Selector */}
       <div className="bg-white p-4 rounded-2xl border border-[#E2E8F0] shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="w-full sm:w-2/3">
@@ -69,7 +102,8 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
         <div className="w-full sm:w-1/3 flex items-end">
           <button
             onClick={handleSampleClick}
-            className="w-full py-2.5 px-3 rounded-lg bg-[#F7F5F0] hover:bg-[#EAE5D9] text-[#102A43] border border-[#CBD5E1] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            disabled={isUploading}
+            className="w-full py-2.5 px-3 rounded-lg bg-[#F7F5F0] hover:bg-[#EAE5D9] text-[#102A43] border border-[#CBD5E1] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
           >
             <span>Try sample rental agreement</span>
             <ArrowRight className="w-3.5 h-3.5 text-[#C49A3A]" />
@@ -82,8 +116,10 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`relative rounded-3xl border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-200 cursor-pointer ${
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+        className={`relative rounded-3xl border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-200 ${
+          isUploading ? 'cursor-wait opacity-80' : 'cursor-pointer'
+        } ${
           isDragging
             ? 'border-[#C49A3A] bg-[#C49A3A]/5 scale-[1.01]'
             : 'border-[#CBD5E1] bg-white hover:border-[#102A43] hover:bg-[#FAF9F5]'
@@ -92,28 +128,38 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.docx,.txt"
+          accept=".pdf,.txt"
           onChange={handleFileInput}
+          disabled={isUploading}
           className="hidden"
         />
 
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-[#102A43]/5 text-[#102A43] flex items-center justify-center border border-[#102A43]/10">
-            <UploadCloud className="w-8 h-8 text-[#102A43]" />
+            {isUploading ? (
+              <Loader2 className="w-8 h-8 text-[#C49A3A] animate-spin" />
+            ) : (
+              <UploadCloud className="w-8 h-8 text-[#102A43]" />
+            )}
           </div>
 
           <div className="space-y-1">
             <p className="text-base sm:text-lg font-bold text-[#102A43]">
-              Drop your document here
+              {isUploading ? 'Uploading and indexing document...' : 'Drop your document here'}
             </p>
             <p className="text-sm text-[#64748B]">
-              or <span className="text-[#C49A3A] font-semibold underline underline-offset-2">choose a file</span> from your computer
+              {isUploading ? (
+                'Extracting page text and preparing chunks on the backend...'
+              ) : (
+                <>
+                  or <span className="text-[#C49A3A] font-semibold underline underline-offset-2">choose a file</span> from your computer
+                </>
+              )}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs text-[#94A3B8]">
             <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#E2E8F0]">PDF</span>
-            <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#E2E8F0]">DOCX</span>
             <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#E2E8F0]">TXT</span>
             <span>(Max 25 MB)</span>
           </div>
@@ -143,17 +189,22 @@ export const DocumentUploadDropzone: React.FC<DocumentUploadDropzoneProps> = ({ 
 
         <button
           onClick={handleSampleClick}
-          className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#102A43] hover:bg-[#0B1F33] text-white text-xs font-semibold shadow-sm transition-all"
+          disabled={isUploading}
+          className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#102A43] hover:bg-[#0B1F33] text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
         >
           <span>Try with sample document</span>
           <ArrowRight className="w-3.5 h-3.5 text-[#C49A3A]" />
         </button>
       </div>
 
-      {/* Privacy Notice */}
-      <div className="text-center text-xs text-[#64748B] flex items-center justify-center gap-1.5">
+      {/* Privacy & Backend Notice */}
+      <div className="text-center text-xs text-[#64748B] flex items-center justify-center gap-2">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-        <span>Files are processed locally in simulated client session for privacy.</span>
+        <span>
+          {backendStatus === 'connected'
+            ? 'Backend connected (FastAPI + Gemini 3.6 Flash ready for grounded Q&A).'
+            : 'Files are processed safely in your session. Key remains strictly server-side.'}
+        </span>
       </div>
     </div>
   );

@@ -9,10 +9,16 @@ import {
   Trash2,
   HelpCircle,
   ArrowRight,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { QAMessage, LegalDocument } from '../../types/legal';
 import { askDocument } from '../../services/aiService';
 import { DemoModeBadge } from '../common/DemoModeBadge';
+import { BackendDocumentNotFoundError } from '../../services/backendApi';
+import { useDocument } from '../../context/DocumentContext';
+import { SafeMarkdown } from '../common/SafeMarkdown';
 
 interface DocumentQaChatProps {
   document: LegalDocument;
@@ -25,9 +31,11 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
   initialMessages = [],
   prefilledQuery = '',
 }) => {
+  const { reuploadCurrentDocument, backendStatus, refreshBackendStatus } = useDocument();
   const [messages, setMessages] = useState<QAMessage[]>(initialMessages);
   const [inputText, setInputText] = useState<string>(prefilledQuery);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isReuploading, setIsReuploading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestedQuestions = [
@@ -67,25 +75,64 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
     setIsLoading(true);
 
     try {
-      const aiMsg = await askDocument(userMsg.text, document.id);
+      const aiMsg = await askDocument(
+        userMsg.text,
+        document.id,
+        document.backendDocumentId,
+        document.name
+      );
       setMessages((prev) => [...prev, aiMsg]);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error asking document:', err);
-      const errorMsg: QAMessage = {
-        id: `err-${Date.now()}`,
-        sender: 'ai',
-        text: 'Unable to retrieve answer from document. Please try asking again.',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      if (err instanceof BackendDocumentNotFoundError) {
+        const restartMsg: QAMessage = {
+          id: `err-${Date.now()}`,
+          sender: 'ai',
+          text: 'The backend server was restarted or the document session in server memory expired. Please re-upload your document to continue real-time Gemini Q&A.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          errorType: 'not_found',
+        };
+        setMessages((prev) => [...prev, restartMsg]);
+      } else {
+        const errorMsg: QAMessage = {
+          id: `err-${Date.now()}`,
+          sender: 'ai',
+          text: err?.detail || err?.message || 'Unable to retrieve answer from document. Please verify your backend server or try asking again.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          errorType: 'general',
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleReupload = async () => {
+    setIsReuploading(true);
+    const success = await reuploadCurrentDocument();
+    setIsReuploading(false);
+
+    if (success) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `sys-${Date.now()}`,
+          sender: 'ai',
+          text: `Document "${document.name}" was successfully re-indexed in server memory. You can now continue asking grounded questions!`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    } else {
+      await refreshBackendStatus();
     }
   };
 
   const handleClearChat = () => {
     setMessages([]);
   };
+
+  const isLiveBackendActive = Boolean(document.backendDocumentId && backendStatus === 'connected');
 
   return (
     <div className="flex flex-col h-[700px] max-h-[85vh] bg-white rounded-3xl border border-[#E2E8F0] shadow-card overflow-hidden">
@@ -98,9 +145,18 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-bold text-base tracking-wide">Ask your documents</h2>
-              {document.isDemo && (
+              {isLiveBackendActive ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Gemini 3.6 Flash Active
+                </span>
+              ) : document.isDemo ? (
                 <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-400 text-amber-950">
                   DEMO
+                </span>
+              ) : (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/10 text-white/80">
+                  Indexed
                 </span>
               )}
             </div>
@@ -114,11 +170,11 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <DemoModeBadge compact />
+          {!isLiveBackendActive && <DemoModeBadge compact />}
           {messages.length > 0 && (
             <button
               onClick={handleClearChat}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors text-xs flex items-center gap-1"
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors text-xs flex items-center gap-1 cursor-pointer"
               title="Clear conversation"
             >
               <Trash2 className="w-4 h-4" />
@@ -141,7 +197,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                 key={q}
                 onClick={() => handleSend(q)}
                 disabled={isLoading}
-                className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white hover:bg-[#102A43] text-[#102A43] hover:text-white border border-[#CBD5E1] font-medium text-xs transition-all shadow-subtle flex-shrink-0 active:scale-95 disabled:opacity-50"
+                className="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white hover:bg-[#102A43] text-[#102A43] hover:text-white border border-[#CBD5E1] font-medium text-xs transition-all shadow-subtle flex-shrink-0 active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 {q}
               </button>
@@ -168,7 +224,7 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                 <button
                   key={q}
                   onClick={() => handleSend(q)}
-                  className="inline-flex items-center gap-1.5 text-xs text-[#102A43] bg-white px-3 py-2 rounded-xl border border-[#CBD5E1] hover:border-[#102A43] transition-all"
+                  className="inline-flex items-center gap-1.5 text-xs text-[#102A43] bg-white px-3 py-2 rounded-xl border border-[#CBD5E1] hover:border-[#102A43] transition-all cursor-pointer"
                 >
                   <span>{q}</span>
                   <ArrowRight className="w-3 h-3 text-[#C49A3A]" />
@@ -192,41 +248,106 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
               ) : (
                 <div className="max-w-2xl bg-white border border-[#E2E8F0] rounded-2xl rounded-tl-xs shadow-card p-5 space-y-4">
                   {/* AI Badge */}
-                  <div className="flex items-center justify-between border-b border-[#F1EFE9] pb-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded bg-[#102A43] text-white">
+                  <div className="flex items-center justify-between border-b border-[#F1EFE9] pb-2.5 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 rounded bg-[#102A43] text-white flex-shrink-0">
                         <Sparkles className="w-3.5 h-3.5 text-[#C49A3A]" />
                       </div>
-                      <span className="font-bold text-[#102A43]">LexiGuide AI</span>
+                      <span className="font-bold text-[#102A43] tracking-tight">LexiGuide AI</span>
+                      {msg.isRateLimited ? (
+                        <>
+                          <span className="text-[#CBD5E1] select-none text-xs hidden sm:inline">•</span>
+                          <span className="inline-flex items-center text-[10px] font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs">
+                            Document-Only Fallback
+                          </span>
+                        </>
+                      ) : msg.isRealBackend ? (
+                        <>
+                          <span className="text-[#CBD5E1] select-none text-xs hidden sm:inline">•</span>
+                          <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                            Gemini 3.6 Flash
+                          </span>
+                        </>
+                      ) : null}
                     </div>
                     <span className="text-[10px] text-[#94A3B8]">{msg.timestamp}</span>
                   </div>
 
+                  {/* Gemini Rate-Limited / Unavailable Notice */}
+                  {msg.isRateLimited && (
+                    <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3 text-xs text-amber-950 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                        <span>Gemini temporarily unavailable</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-normal">
+                        Your document was still searched. LexiGuide will not guess when the answer is not supported by the document.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Plain Language Answer */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
                       Answer
                     </span>
-                    <p className="text-sm text-[#102A43] leading-relaxed">
-                      {msg.text}
-                    </p>
+                    <SafeMarkdown content={msg.text} />
                   </div>
 
-                  {/* Grounded Source Reference from uploaded demo document */}
-                  {msg.sourceReference && (
-                    <div className="bg-[#FAF9F5] rounded-xl p-3.5 border border-[#E2E8F0] space-y-1.5">
+                  {/* Re-upload Action if session expired */}
+                  {msg.errorType === 'not_found' && (
+                    <div className="bg-amber-50 rounded-xl p-3.5 border border-amber-200 text-xs text-amber-900 space-y-2">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                        <span>Document session needs renewal</span>
+                      </div>
+                      <p className="text-amber-800 text-[11px]">
+                        The FastAPI backend holds documents in memory for security. When the backend restarts, simply click below to re-index your document.
+                      </p>
+                      <button
+                        onClick={handleReupload}
+                        disabled={isReuploading}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#102A43] hover:bg-[#0B1F33] text-white font-semibold text-xs shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isReuploading ? 'animate-spin' : ''}`} />
+                        <span>{isReuploading ? 'Re-uploading...' : 'Re-upload Document Now'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Grounded Source References */}
+                  {((msg.sources && msg.sources.length > 0) || msg.sourceReference) && (
+                    <div className="bg-[#FAF9F5] rounded-xl p-3.5 border border-[#E2E8F0] space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-[#102A43] flex items-center gap-1.5">
                           <Bookmark className="w-3.5 h-3.5 text-[#C49A3A]" />
-                          Source reference from the uploaded demo document:
+                          Sources from your uploaded document:
                         </span>
-                        <span className="text-[11px] font-mono font-medium text-[#64748B] bg-white px-2 py-0.5 rounded border border-[#E2E8F0]">
-                          Page {msg.sourceReference.page} • {msg.sourceReference.clauseTitle}
+                        <span className="text-[10px] text-[#64748B] font-mono">
+                          Page attribution
                         </span>
                       </div>
-                      <p className="text-xs font-serif text-[#334E68] italic border-l-2 border-[#C49A3A] pl-2.5 my-1">
-                        "{msg.sourceReference.textSnippet}"
-                      </p>
+
+                      <div className="space-y-2">
+                        {(msg.sources && msg.sources.length > 0 ? msg.sources : [msg.sourceReference!]).map(
+                          (source, idx) => (
+                            <div key={idx} className="border-l-2 border-[#C49A3A] pl-3 py-1 space-y-1">
+                              <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
+                                <span className="font-bold text-[#102A43] font-mono">Page {source.page}</span>
+                                {source.clauseTitle && <span>• {source.clauseTitle}</span>}
+                                {typeof source.relevanceScore === 'number' && (
+                                  <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                    {Math.round(source.relevanceScore * 100)}% relevance
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs font-serif text-[#334E68] italic leading-relaxed">
+                                "{source.textSnippet}"
+                              </p>
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -249,6 +370,14 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
                       </div>
                     </div>
                   )}
+
+                  {/* Backend Legal Disclaimer */}
+                  {msg.disclaimer && (
+                    <div className="pt-2 border-t border-[#F1EFE9] text-[11px] text-[#64748B] italic flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                      <span>{msg.disclaimer}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -261,7 +390,9 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
             <div className="bg-white border border-[#E2E8F0] rounded-2xl rounded-tl-xs p-4 shadow-subtle flex items-center gap-3">
               <Sparkles className="w-4 h-4 text-[#C49A3A] animate-spin" />
               <span className="text-xs font-medium text-[#64748B]">
-                Synthesizing response and locating source references...
+                {isLiveBackendActive
+                  ? 'Retrieving document excerpts & generating answer with Gemini 3.6 Flash...'
+                  : 'Synthesizing response and locating source references...'}
               </span>
             </div>
           </div>
@@ -283,7 +414,11 @@ export const DocumentQaChat: React.FC<DocumentQaChatProps> = ({
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask anything about this document..."
+            placeholder={
+              isLiveBackendActive
+                ? `Ask Gemini 3.6 Flash about "${document.name}"...`
+                : `Ask anything about "${document.name}"...`
+            }
             disabled={isLoading}
             className="flex-1 bg-[#FAF9F5] border border-[#CBD5E1] focus:border-[#102A43] text-sm text-[#102A43] placeholder-[#94A3B8] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#102A43]/15 transition-all"
           />

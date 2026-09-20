@@ -95,14 +95,57 @@ export async function compareDocuments(
   };
 }
 
+import {
+  askBackendDocument,
+  BackendDocumentNotFoundError,
+  BackendConnectionError,
+} from './backendApi';
+
 /**
  * Answers a user question grounded in the document content.
- * Returns answer with source references and related sections.
+ * If backendDocId is provided, queries the real FastAPI backend + Gemini 3.6 Flash.
+ * Otherwise, falls back to the keyword-aware simulated engine.
  */
 export async function askDocument(
   query: string,
-  _docId: string
+  _docId: string,
+  backendDocId?: string,
+  documentName: string = 'Document'
 ): Promise<QAMessage> {
+  // If a real backend document ID is available, communicate with FastAPI & Gemini 3.6 Flash
+  if (backendDocId) {
+    try {
+      const response = await askBackendDocument(backendDocId, query);
+      const mappedSources = response.sources.map((s) => ({
+        documentName,
+        page: s.page,
+        textSnippet: s.snippet,
+        relevanceScore: s.relevance_score,
+      }));
+
+      return {
+        id: `qa-${Date.now()}`,
+        sender: 'ai',
+        text: response.answer,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sourceReference: mappedSources[0],
+        sources: mappedSources,
+        disclaimer: response.disclaimer,
+        isRealBackend: true,
+        isRateLimited: response.status === 'rate_limited' || Boolean(response.fallback_used),
+      };
+    } catch (err) {
+      if (err instanceof BackendDocumentNotFoundError) {
+        throw err;
+      }
+      if (err instanceof BackendConnectionError) {
+        console.warn('Backend connection failed, falling back to simulated response:', err.message);
+      } else {
+        throw err;
+      }
+    }
+  }
+
   await delay(700);
 
   const lower = query.toLowerCase();

@@ -42,11 +42,11 @@ export const AskAiPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <span>
-            Every answer includes <strong>source references from the uploaded demo document</strong> so you can verify each statement directly in the contract text.
+            Every answer includes <strong>source references from your uploaded document</strong> so you can verify each statement directly in the contract text.
           </span>
         </div>
         <span className="text-[11px] font-mono text-[#94A3B8]">
-          Model: LexiGuide Grounded Assistant (Demo)
+          Model: {currentDoc.backendDocumentId ? 'Gemini 3.6 Flash (Live Backend)' : 'LexiGuide Grounded Assistant (Demo)'}
         </span>
       </div>
     </div>

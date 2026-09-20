@@ -74,9 +74,10 @@ export interface ComparisonResult {
 export interface SourceReference {
   documentName: string;
   page: number;
-  section: string;
-  clauseTitle: string;
+  section?: string;
+  clauseTitle?: string;
   textSnippet: string;
+  relevanceScore?: number;
 }
 
 export interface QAMessage {
@@ -85,8 +86,13 @@ export interface QAMessage {
   text: string;
   timestamp: string;
   sourceReference?: SourceReference;
+  sources?: SourceReference[];
+  disclaimer?: string;
   relatedSections?: string[];
   isSimulating?: boolean;
+  isRealBackend?: boolean;
+  isRateLimited?: boolean;
+  errorType?: 'not_found' | 'offline' | 'general';
 }
 
 export interface ChecklistItem {
@@ -115,6 +121,9 @@ export type DocumentType =
 
 export interface LegalDocument {
   id: string;
+  backendDocumentId?: string;
+  rawFile?: File;
+  preview?: string;
   name: string;
   type: DocumentType;
   pageCount: number;
