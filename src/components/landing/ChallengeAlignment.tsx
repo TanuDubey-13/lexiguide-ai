@@ -15,8 +15,7 @@ export const ChallengeAlignment: React.FC = () => {
     {
       id: 'understand-language',
       title: 'Understand Legal Language',
-      description:
-        'Turn dense clauses into clearer plain-language explanations without changing the underlying document.',
+      description: 'Plain-language explanations of complex clauses.',
       icon: BookOpen,
       iconColor: 'text-[#C49A3A]',
       iconBg: 'bg-[#C49A3A]/10',
@@ -26,8 +25,7 @@ export const ChallengeAlignment: React.FC = () => {
     {
       id: 'identify-clauses',
       title: 'Identify Important Clauses',
-      description:
-        'Surface obligations, payments, deadlines, termination terms, and other areas that may require closer review.',
+      description: 'Surface obligations, payments, deadlines, and termination terms.',
       icon: AlertTriangle,
       iconColor: 'text-amber-700',
       iconBg: 'bg-amber-50',
@@ -37,8 +35,7 @@ export const ChallengeAlignment: React.FC = () => {
     {
       id: 'ask-document',
       title: 'Ask Your Document',
-      description:
-        'Ask natural-language questions and receive answers grounded in relevant sections of the uploaded document.',
+      description: 'Ask natural-language questions about uploaded documents.',
       icon: MessageCircle,
       iconColor: 'text-emerald-700',
       iconBg: 'bg-emerald-50',
@@ -48,8 +45,7 @@ export const ChallengeAlignment: React.FC = () => {
     {
       id: 'compare-documents',
       title: 'Compare Documents',
-      description:
-        'Understand meaningful differences between document versions and identify points that may need further review.',
+      description: 'Understand meaningful differences between document versions.',
       icon: GitCompare,
       iconColor: 'text-sky-700',
       iconBg: 'bg-sky-50',
@@ -59,8 +55,7 @@ export const ChallengeAlignment: React.FC = () => {
     {
       id: 'prepare-legal-help',
       title: 'Prepare for Legal Help',
-      description:
-        'Organize questions, deadlines, documents, and discussion points before consulting a qualified legal professional.',
+      description: 'Organize questions and discussion points for a qualified legal professional.',
       icon: ClipboardList,
       iconColor: 'text-indigo-700',
       iconBg: 'bg-indigo-50',
@@ -74,15 +69,15 @@ export const ChallengeAlignment: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#102A43]/5 text-[#102A43] text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#102A43]/5 text-[#102A43] text-xs font-bold uppercase tracking-wider mb-3">
             <Scale className="w-3.5 h-3.5 text-[#C49A3A]" />
-            <span>Hackathon Focus • AI for Legal Assistance & Access</span>
+            <span>Hackathon Challenge • AI for Legal Assistance & Access</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#102A43] font-sans">
-            Built for Legal Assistance & Access
+            Built for AI for Legal Assistance &amp; Access
           </h2>
           <p className="text-base sm:text-lg text-[#64748B] mt-3 leading-relaxed">
-            LexiGuide AI helps people understand complex legal documents, identify what matters, and prepare clearer questions for professional legal help.
+            LexiGuide AI helps people understand complex legal documents, identify important obligations, ask document-grounded questions, and prepare clearer questions for qualified legal professionals.
           </p>
         </div>
 

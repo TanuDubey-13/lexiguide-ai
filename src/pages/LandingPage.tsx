@@ -1,9 +1,8 @@
 import React from 'react';
 import { HeroSection } from '../components/landing/HeroSection';
 import { ChallengeAlignment } from '../components/landing/ChallengeAlignment';
-import { GroundedAiShowcase } from '../components/landing/GroundedAiShowcase';
+import { GroundedWorkflowSection } from '../components/landing/GroundedWorkflowSection';
 import { InteractivePreview } from '../components/landing/InteractivePreview';
-import { HowItWorks } from '../components/landing/HowItWorks';
 import {
   ArrowRight,
   Sparkles,
@@ -56,22 +55,19 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="space-y-0">
-      {/* 1. Hero Section */}
+      {/* Hero Section */}
       <HeroSection />
 
-      {/* 2. Challenge Alignment Section (Directly Below Hero) */}
+      {/* SECTION 1: Built for AI for Legal Assistance & Access (Directly Below Hero) */}
       <ChallengeAlignment />
 
-      {/* 3. Document-Grounded AI Q&A Section & Example */}
-      <GroundedAiShowcase />
+      {/* SECTION 2: From Legal Document to Grounded Answer (Workflow + Example + Trust Note) */}
+      <GroundedWorkflowSection />
 
-      {/* 4. Interactive Document Workspace Preview */}
+      {/* Interactive Document Workspace Preview */}
       <InteractivePreview />
 
-      {/* 5. How It Works: 6-Step Workflow */}
-      <HowItWorks />
-
-      {/* 6. Responsible AI & Trust Section: Designed to Inform, Not Replace */}
+      {/* Responsible AI Guardrails Block */}
       <section className="py-16 lg:py-24 bg-white border-t border-[#E2E8F0]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-[#FAF9F5] rounded-3xl p-8 sm:p-12 border border-[#E2E8F0] shadow-subtle space-y-8">
@@ -138,7 +134,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 7. Final Call To Action */}
+      {/* Final Call To Action */}
       <section className="py-20 bg-gradient-to-b from-[#FAF9F5] to-[#F7F5F0] text-center border-t border-[#E2E8F0]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="w-14 h-14 rounded-2xl bg-[#102A43] text-white flex items-center justify-center mx-auto shadow-md">
